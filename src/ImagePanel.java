@@ -10,7 +10,7 @@ public class ImagePanel extends JPanel {
     {
         setBounds(0, 70, 800, 630);
         setLayout(null);
-        setBackground(Color.orange);
+        setBackground(new Color(239, 248, 253));
     }
 
     public JLabel getOpenImage() {

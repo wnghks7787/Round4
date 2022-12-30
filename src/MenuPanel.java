@@ -7,6 +7,7 @@ public class MenuPanel extends JPanel {
     {
         setLayout(null);
         setBounds(0, 0, 800, 70);
-        setBackground(Color.white);
+        setBackground(new Color(238, 232, 253));
+
     }
 }

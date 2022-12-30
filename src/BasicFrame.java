@@ -239,7 +239,10 @@ public class BasicFrame extends JFrame {
 
                 double value = Math.pow(2, jValue.getValue());
 
-                rightImage = gammaTransformation(leftImage, value);
+                if(!smoothSelect)
+                    rightImage = gammaTransformation(leftImage, value);
+                else
+                    rightImage = gammaTransformation(averageFiltering(leftImage), value);
                 rightLabel.setIcon(new ImageIcon(rightImage));
             }
         });
