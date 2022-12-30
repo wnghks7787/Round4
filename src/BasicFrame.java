@@ -22,6 +22,7 @@ public class BasicFrame extends JFrame {
     JButton uploadBtn;
     JButton grayBtn;
     JButton edgeBtn;
+    JButton smoothBtn;
     JSlider brightSlider;
 
     // 파일 입출력
@@ -35,6 +36,8 @@ public class BasicFrame extends JFrame {
     // flag
     boolean graySelect = false;
     boolean edgeSelect = false;
+    boolean smoothSelect = false;
+
     public BasicFrame()
     {
         setLayout(null);
@@ -50,6 +53,7 @@ public class BasicFrame extends JFrame {
         addUploadButton(menuPanel, imagePanel);
         addGrayButton(menuPanel, imagePanel);
         addEdgeButton(menuPanel, imagePanel);
+        addSmoothButton(menuPanel, imagePanel);
         addBrightSlider(menuPanel, imagePanel);
     }
 
@@ -139,18 +143,21 @@ public class BasicFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 BufferedImage bufferedImage;
-                if (!graySelect) {
+                if (!graySelect && !smoothSelect) {
                     bufferedImage = getGrayScaleImage(leftImage);
-//                JLabel myLabel = new JLabel(new ImageIcon(bufferedImage));
-//                myLabel.setBounds(400, 10, 350, 610);
-
-//                label.setBounds(400, 10, 350, 610);
-
-//                showPanel.add(myLabel);
-                } else
+                }
+                else if(!graySelect && smoothSelect) {
+                    bufferedImage = averageFiltering(getGrayScaleImage(leftImage));
+                }
+                else if(graySelect && !smoothSelect)
+                {
                     bufferedImage = copyBufferedImage(leftImage);
+                }
+                else
+                    bufferedImage = averageFiltering(leftImage);
 
                 graySelect = !graySelect;
+                edgeSelect = false;
                 rightLabel.setIcon(new ImageIcon(bufferedImage));
             }
         });
@@ -167,14 +174,49 @@ public class BasicFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(!edgeSelect) {
-                    rightImage = averageFiltering(leftImage);
+                    rightImage = getGrayScaleImage(leftImage);
+                    rightImage = averageFiltering(rightImage);
                     rightImage = edgeDetection(rightImage);
                 }
                 else
                     rightImage = copyBufferedImage(leftImage);
 
                 edgeSelect = !edgeSelect;
+                graySelect = false;
+                smoothSelect = false;
                 rightLabel.setIcon(new ImageIcon(rightImage));
+            }
+        });
+    }
+
+    void addSmoothButton(JPanel btnPanel, JPanel showPanel)
+    {
+        smoothBtn = new JButton("Smooth");
+        btnPanel.add(smoothBtn);
+
+        smoothBtn.setBounds(380, 10, 100, 50);
+
+        smoothBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(!smoothSelect && !graySelect)
+                {
+                    rightImage = averageFiltering(leftImage);
+                }
+                else if(!smoothSelect)
+                {
+                    rightImage = averageFiltering(getGrayScaleImage(leftImage));
+                }
+                else if(!graySelect)
+                {
+                    rightImage = copyBufferedImage(leftImage);
+                }
+                else
+                    rightImage = getGrayScaleImage(leftImage);
+
+                rightLabel.setIcon(new ImageIcon(rightImage));
+                smoothSelect = !smoothSelect;
+                edgeSelect = false;
             }
         });
     }
@@ -273,17 +315,17 @@ public class BasicFrame extends JFrame {
 
     BufferedImage averageFiltering(BufferedImage inputImage)
     {
-        BufferedImage grayImage = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), Image.SCALE_SMOOTH);
         BufferedImage outputImage = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), Image.SCALE_SMOOTH);
 
-        Color grayColor;
-        grayImage = getGrayScaleImage(inputImage);
+        Color pixColor;
 
         for(int i = 0 ; i < inputImage.getWidth() ; i++)
         {
             for(int j = 0 ; j < inputImage.getHeight() ; j++)
             {
-                int avgColor = 0;
+                int avgColorR = 0;
+                int avgColorG = 0;
+                int avgColorB = 0;
                 int cnt = 0;
 
                 for(int x = -1 ; x < 2 ; x++) {
@@ -291,14 +333,18 @@ public class BasicFrame extends JFrame {
                         if(i + x < 0 || i + x >= inputImage.getWidth() || j + y < 0 || j + y >= inputImage.getHeight())
                             continue;
 
-                        grayColor = new Color(grayImage.getRGB(i + x, j + y));
-                        avgColor += grayColor.getRed();
+                        pixColor = new Color(inputImage.getRGB(i + x, j + y));
+                        avgColorR += pixColor.getRed();
+                        avgColorG += pixColor.getGreen();
+                        avgColorB += pixColor.getBlue();
                         cnt++;
                     }
                 }
-                avgColor /= cnt;
+                avgColorR /= cnt;
+                avgColorG /= cnt;
+                avgColorB /= cnt;
 
-                outputImage.setRGB(i, j, new Color(avgColor, avgColor, avgColor, Image.SCALE_SMOOTH).getRGB());
+                outputImage.setRGB(i, j, new Color(avgColorR, avgColorG, avgColorB, Image.SCALE_SMOOTH).getRGB());
             }
         }
 
